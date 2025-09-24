@@ -1,0 +1,112 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.AppleDouble
+.LSOverride
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Linux / Windows OS metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# JetBrains Fleet
+.fleet/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/.packages
+/build/
+/coverage/
+
+# FVM (Flutter Version Manager)
+.fvm/
+.fvmrc
+
+# Generated plugin registrants (multi-platform)
+**/GeneratedPluginRegistrant.*
+lib/generated_plugin_registrant.dart
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Android
+**/android/local.properties
+**/android/.gradle/
+**/android/captures/
+**/android/key.properties
+**/*.keystore
+**/*.keystore.properties
+**/*.jks
+
+# iOS
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/ephemeral/
+**/ios/.generated/
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/**/xcuserdata/
+
+# macOS
+**/macos/Flutter/ephemeral/
+**/macos/.generated/
+**/macos/.symlinks/
+**/macos/Pods/
+**/macos/**/xcuserdata/
+
+# Linux
+**/linux/flutter/ephemeral/
+**/linux/**/generated_plugin_registrant.*
+
+# Windows
+**/windows/flutter/ephemeral/
+**/windows/**/generated_plugin_registrant.*
+
+# Web
+.firebase/
+
+# Firebase/Google service configs (often contain project IDs and keys)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Fastlane (iOS/Android automation)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
