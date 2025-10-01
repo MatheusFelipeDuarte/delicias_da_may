@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "delicias_da_may" "\0"
+            VALUE "FileDescription", "Delícias da May" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "delicias_da_may" "\0"
+            VALUE "InternalName", "Delícias da May" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "delicias_da_may.exe" "\0"
-            VALUE "ProductName", "delicias_da_may" "\0"
+            VALUE "OriginalFilename", "DeliciasDaMay.exe" "\0"
+            VALUE "ProductName", "Delícias da May" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

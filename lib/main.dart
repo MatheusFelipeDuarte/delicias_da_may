@@ -51,6 +51,7 @@ class MyApp extends StatelessWidget {
           create: (_) => FinanceViewModel(
             orderRepository: OrderRepository(),
             expenseRepository: ExpenseRepository(),
+            productRepository: ProductRepository(),
           )..init(),
         ),
       ],

@@ -19,6 +19,22 @@ class OrderRepository {
     return 1;
   }
 
+  Future<List<Order>> listAll() async {
+    final snap = await _col.orderBy('time', descending: true).get();
+    return snap.docs.map((d) {
+      final m = d.data();
+      return Order.fromMap({
+        'id': int.tryParse(d.id),
+        'produto_id': m['produto_id'],
+        'cliente_id': m['cliente_id'],
+        'valor': m['valor'],
+        'quantidade': m['quantidade'] ?? 1,
+        'pagamento': m['pagamento'],
+        'time': m['time'],
+      });
+    }).toList();
+  }
+
   Future<List<Order>> getByDate(DateTime date) async {
     final start = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59, 999).millisecondsSinceEpoch;
@@ -105,5 +121,26 @@ class OrderRepository {
         .where('time', isLessThanOrEqualTo: end)
         .get();
     return snap.docs.length;
+  }
+
+  Future<List<Order>> listByRange(DateTime startDt, DateTime endDt) async {
+    final start = DateTime(startDt.year, startDt.month, startDt.day).millisecondsSinceEpoch;
+    final end = DateTime(endDt.year, endDt.month, endDt.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.map((d) {
+      final m = d.data();
+      return Order.fromMap({
+        'id': int.tryParse(d.id),
+        'produto_id': m['produto_id'],
+        'cliente_id': m['cliente_id'],
+        'valor': m['valor'],
+        'quantidade': m['quantidade'] ?? 1,
+        'pagamento': m['pagamento'],
+        'time': m['time'],
+      });
+    }).toList();
   }
 }

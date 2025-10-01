@@ -3,6 +3,8 @@ import 'package:delicias_da_may/viewmodels/clients_view_model.dart';
 import 'package:delicias_da_may/viewmodels/calendar_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:delicias_da_may/core/phone_formatter.dart';
+import 'package:delicias_da_may/core/whatsapp_launcher.dart';
 import 'package:delicias_da_may/models/client.dart';
 
 class ClientsScreen extends StatelessWidget {
@@ -36,9 +38,12 @@ class ClientsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: ListView.builder(
-                itemCount: vm.filtered.length,
-                itemBuilder: (context, i) {
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: vm.filtered.length,
+                  itemBuilder: (context, i) {
                   final c = vm.filtered[i];
                   return Dismissible(
                     key: ValueKey('client-${c.id}-${i}'),
@@ -80,8 +85,18 @@ class ClientsScreen extends StatelessWidget {
                     child: Card(
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       child: ListTile(
+                        onTap: () async {
+                          final phone = c.phone.trim();
+                          if (phone.isEmpty) return;
+                          final ok = await WhatsAppLauncher.open(phone);
+                          if (!ok) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir o WhatsApp')));
+                            }
+                          }
+                        },
                         title: Text('${c.nome} • ${c.endereco}', overflow: TextOverflow.ellipsis),
-                        subtitle: Text(c.phone),
+                        subtitle: Text(PhoneFormatter.formatBr(c.phone)),
                         trailing: InkWell(
                           borderRadius: BorderRadius.circular(12),
                           onTap: () async {
@@ -121,7 +136,8 @@ class ClientsScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                },
+                  },
+                ),
               ),
             ),
           ],

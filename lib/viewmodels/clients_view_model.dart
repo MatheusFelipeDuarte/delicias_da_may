@@ -1,6 +1,10 @@
 import 'package:delicias_da_may/models/client.dart';
 import 'package:delicias_da_may/repositories/client_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:delicias_da_may/data/data_cache.dart';
+import 'package:delicias_da_may/repositories/product_repository.dart';
+import 'package:delicias_da_may/repositories/order_repository.dart';
+import 'package:delicias_da_may/repositories/expense_repository.dart';
 
 class ClientsViewModel extends ChangeNotifier {
   final ClientRepository repo;
@@ -18,6 +22,13 @@ class ClientsViewModel extends ChangeNotifier {
 
   Future<void> init() async {
     _all = await repo.listAll();
+    await DataCache.instance.ensureLoaded(
+      clientsRepo: repo,
+      productsRepo: ProductRepository(),
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
+    _all = DataCache.instance.clients;
     notifyListeners();
   }
 
@@ -28,6 +39,13 @@ class ClientsViewModel extends ChangeNotifier {
 
   Future<void> refresh() async {
     _all = await repo.listAll();
+    await DataCache.instance.refreshAll(
+      clientsRepo: repo,
+      productsRepo: ProductRepository(),
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
+    _all = DataCache.instance.clients;
     notifyListeners();
   }
 
@@ -38,6 +56,12 @@ class ClientsViewModel extends ChangeNotifier {
     int qtdSelos = 0,
   }) async {
     await repo.insert(Client(nome: nome, endereco: endereco, qtdSelos: qtdSelos, phone: phone));
+    await DataCache.instance.refreshAll(
+      clientsRepo: repo,
+      productsRepo: ProductRepository(),
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
     await refresh();
   }
 }

@@ -8,13 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:delicias_da_may/data/csv_importer.dart';
-import 'package:delicias_da_may/repositories/client_repository.dart';
-import 'package:delicias_da_may/repositories/product_repository.dart';
-import 'package:delicias_da_may/repositories/order_repository.dart';
-import 'package:delicias_da_may/repositories/expense_repository.dart';
+import 'package:delicias_da_may/core/phone_formatter.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -29,38 +23,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendário'),
-        actions: [
-          IconButton(
-            tooltip: 'Importar CSV',
-            icon: const Icon(Icons.upload_file),
-            onPressed: () async {
-              try {
-                final res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-                if (res == null || res.files.isEmpty) return;
-                final path = res.files.single.path;
-                if (path == null) return;
-                final importer = CsvImporter(
-                  clients: ClientRepository(),
-                  products: ProductRepository(),
-                  orders: OrderRepository(),
-                  expenses: ExpenseRepository(),
-                );
-                await importer.importFile(File(path));
-                if (!context.mounted) return;
-                final calendar = context.read<CalendarViewModel>();
-                await calendar.reloadOptions();
-                await calendar.loadForDay(calendar.selectedDay);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Importação concluída')));
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha ao importar: $e')));
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Calendário')),
       body: Consumer<CalendarViewModel>(
         builder: (context, vm, _) {
           return Stack(
@@ -360,6 +323,7 @@ class _DayCard extends StatelessWidget {
                         final client = details.client;
                         final product = details.product;
                         final dt = DateFormat('dd/MM/yyyy HH:mm').format(o.time);
+                        final phoneFmt = client != null ? PhoneFormatter.formatBr(client.phone) : '-';
                         if (context.mounted) {
                           await showDialog(
                             context: context,
@@ -372,6 +336,7 @@ class _DayCard extends StatelessWidget {
                                   children: [
                                     _kv('ID', o.id?.toString() ?? '-'),
                                     _kv('Cliente', client != null ? '${client.nome} • ${client.endereco}' : '#${o.clienteId}'),
+                                    _kv('Telefone', phoneFmt),
                                     _kv('Produto', product?.nome ?? '#${o.produtoId}'),
                                     _kv('Quantidade', o.quantidade.toString()),
                                     _kv('Valor', currency.format(o.valor)),

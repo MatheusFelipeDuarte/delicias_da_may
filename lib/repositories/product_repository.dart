@@ -19,6 +19,19 @@ class ProductRepository {
         .toList();
   }
 
+  Future<List<Product>> getByIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    // Firestore whereIn on documentId is limited and may not be available across large sets
+    // For simplicity and small expected sizes, fetch individually in parallel
+    final futures = ids.map((id) async {
+      final d = await _col.doc(id.toString()).get();
+      if (!d.exists) return null;
+      return Product.fromMap({'id': id, 'nome': d.data()!['nome']});
+    });
+    final results = await Future.wait(futures);
+    return results.whereType<Product>().toList();
+  }
+
   Future<int> insert(Product product) async {
     final id = product.id ?? await FirestoreCounters.next('products');
     await _col.doc(id.toString()).set({'nome': product.nome});

@@ -1,6 +1,10 @@
 import 'package:delicias_da_may/models/product.dart';
 import 'package:delicias_da_may/repositories/product_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:delicias_da_may/data/data_cache.dart';
+import 'package:delicias_da_may/repositories/order_repository.dart';
+import 'package:delicias_da_may/repositories/expense_repository.dart';
+import 'package:delicias_da_may/repositories/client_repository.dart';
 
 class ProductsViewModel extends ChangeNotifier {
   final ProductRepository repo;
@@ -14,7 +18,13 @@ class ProductsViewModel extends ChangeNotifier {
       .toList();
 
   Future<void> init() async {
-    _all = await repo.listAll();
+    await DataCache.instance.ensureLoaded(
+      clientsRepo: ClientRepository(),
+      productsRepo: repo,
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
+    _all = DataCache.instance.products;
     notifyListeners();
   }
 
@@ -24,12 +34,24 @@ class ProductsViewModel extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    _all = await repo.listAll();
+    await DataCache.instance.refreshAll(
+      clientsRepo: ClientRepository(),
+      productsRepo: repo,
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
+    _all = DataCache.instance.products;
     notifyListeners();
   }
 
   Future<void> addProduct(String nome) async {
     await repo.insert(Product(nome: nome.trim()));
+    await DataCache.instance.refreshAll(
+      clientsRepo: ClientRepository(),
+      productsRepo: repo,
+      ordersRepo: OrderRepository(),
+      expensesRepo: ExpenseRepository(),
+    );
     await refresh();
   }
 }

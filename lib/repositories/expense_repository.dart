@@ -17,6 +17,20 @@ class ExpenseRepository {
     return 1;
   }
 
+  Future<List<Expense>> listAll() async {
+    final snap = await _col.orderBy('time', descending: true).get();
+    return snap.docs.map((d) {
+      final m = d.data();
+      return Expense.fromMap({
+        'id': int.tryParse(d.id),
+        'categoria': m['categoria'],
+        'valor': m['valor'],
+        'pagamento': m['pagamento'],
+        'time': m['time'],
+      });
+    }).toList();
+  }
+
   Future<List<Expense>> getByDate(DateTime date) async {
     final start = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59, 999).millisecondsSinceEpoch;
@@ -78,5 +92,24 @@ class ExpenseRepository {
         .where('time', isLessThanOrEqualTo: end)
         .get();
     return snap.docs.fold<double>(0.0, (p, d) => p + ((d.data()['valor'] as num?)?.toDouble() ?? 0.0));
+  }
+
+  Future<List<Expense>> listByRange(DateTime startDt, DateTime endDt) async {
+    final start = DateTime(startDt.year, startDt.month, startDt.day).millisecondsSinceEpoch;
+    final end = DateTime(endDt.year, endDt.month, endDt.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.map((d) {
+      final m = d.data();
+      return Expense.fromMap({
+        'id': int.tryParse(d.id),
+        'categoria': m['categoria'],
+        'valor': m['valor'],
+        'pagamento': m['pagamento'],
+        'time': m['time'],
+      });
+    }).toList();
   }
 }

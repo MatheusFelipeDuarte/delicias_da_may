@@ -8,6 +8,7 @@ import 'package:delicias_da_may/repositories/expense_repository.dart';
 import 'package:delicias_da_may/repositories/order_repository.dart';
 import 'package:delicias_da_may/repositories/product_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:delicias_da_may/data/data_cache.dart';
 
 class DayCardItem {
   final String title; // Vendas: Cliente + Endereço; Gastos: Categoria
@@ -64,6 +65,12 @@ class CalendarViewModel extends ChangeNotifier {
   List<ExpenseCategory> get expenseCategories => ExpenseCategory.values;
 
   Future<void> init() async {
+    await DataCache.instance.ensureLoaded(
+      clientsRepo: clientRepo,
+      productsRepo: productRepo,
+      ordersRepo: orderRepo,
+      expensesRepo: expenseRepo,
+    );
     await loadForDay(_selectedDay);
     await reloadOptions();
   }
@@ -76,8 +83,9 @@ class CalendarViewModel extends ChangeNotifier {
   Future<void> loadForDay(DateTime day) async {
     _loading = true;
     notifyListeners();
-    final orders = await orderRepo.getByDate(day);
-    final expenses = await expenseRepo.getByDate(day);
+    // Read from cache instead of hitting Firestore
+    final orders = DataCache.instance.ordersByDate(day);
+    final expenses = DataCache.instance.expensesByDate(day);
 
     final items = <DayCardItem>[];
 
@@ -129,27 +137,31 @@ class CalendarViewModel extends ChangeNotifier {
   // Delete and Update operations
   Future<void> deleteOrder(int id) async {
     await orderRepo.delete(id);
+    DataCache.instance.deleteOrder(id);
     await loadForDay(_selectedDay);
   }
 
   Future<void> deleteExpense(int id) async {
     await expenseRepo.delete(id);
+    DataCache.instance.deleteExpense(id);
     await loadForDay(_selectedDay);
   }
 
   Future<void> updateOrder(Order order) async {
     await orderRepo.update(order);
+    DataCache.instance.updateOrder(order);
     await loadForDay(_selectedDay);
   }
 
   Future<void> updateExpense(Expense expense) async {
     await expenseRepo.update(expense);
+    DataCache.instance.updateExpense(expense);
     await loadForDay(_selectedDay);
   }
 
   Future<void> reloadOptions() async {
-    _clients = await clientRepo.listAll();
-    _products = await productRepo.listAll();
+    _clients = DataCache.instance.clients;
+    _products = DataCache.instance.products;
     notifyListeners();
   }
 
@@ -172,6 +184,7 @@ class CalendarViewModel extends ChangeNotifier {
       time: when,
     );
     await orderRepo.insert(order);
+    DataCache.instance.addOrder(order);
     await loadForDay(_selectedDay);
   }
 
@@ -189,6 +202,7 @@ class CalendarViewModel extends ChangeNotifier {
       time: when,
     );
     await expenseRepo.insert(expense);
+    DataCache.instance.addExpense(expense);
     await loadForDay(_selectedDay);
   }
 
