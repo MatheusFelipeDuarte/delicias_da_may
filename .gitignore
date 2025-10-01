@@ -44,6 +44,7 @@ Desktop.ini
 /.packages
 /build/
 /coverage/
+/lib/firebase_options.dart
 
 # FVM (Flutter Version Manager)
 .fvm/
