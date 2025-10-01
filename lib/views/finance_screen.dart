@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:delicias_da_may/data/local_db.dart';
+import 'package:delicias_da_may/data/firestore_backup.dart';
 import 'package:delicias_da_may/viewmodels/calendar_view_model.dart';
 import 'package:delicias_da_may/viewmodels/clients_view_model.dart';
 import 'package:delicias_da_may/viewmodels/products_view_model.dart';
@@ -48,7 +48,7 @@ class FinanceScreen extends StatelessWidget {
                 return;
               }
               final content = await file.readAsString();
-              await LocalDb.instance.importJson(content);
+              await FirestoreBackup().importJson(content);
               // Refresh all viewmodels so UI reflects imported data
               if (context.mounted) {
                 final calendar = context.read<CalendarViewModel>();
@@ -79,7 +79,7 @@ class FinanceScreen extends StatelessWidget {
             icon: const Icon(Icons.save_alt),
             onPressed: () async {
               try {
-                final json = await LocalDb.instance.exportJson();
+                final json = await FirestoreBackup().exportJson();
                 final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
                 final file = File('${dir.path}/delicias_da_may_backup.json');
                 await file.writeAsString(json);

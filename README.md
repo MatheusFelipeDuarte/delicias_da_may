@@ -86,6 +86,33 @@ Notas de plataforma:
 - Desktop (Linux/Windows/macOS): habilitado via `sqflite_common_ffi` no `main.dart`.
 - Web: a UI compila, mas a persistência via `sqflite` não está habilitada neste alvo.
 
+## Como migrar para Firebase Firestore (este projeto já está preparado)
+
+1) Criar o projeto no Firebase e habilitar Firestore (modo Teste para desenvolvimento).
+2) Instalar e usar o FlutterFire CLI para gerar `firebase_options.dart` (recomendado):
+	 - `dart pub global activate flutterfire_cli`
+	 - `flutterfire configure` (selecione o projeto, plataformas desejadas)
+	 - Isso criará `lib/firebase_options.dart` e configurações nativas (Android/iOS). Depois, descomente a linha em `main.dart` para usar `DefaultFirebaseOptions.currentPlatform`.
+3) Android: garanta que o `google-services.json` esteja em `android/app/` e que o plugin de Google Services esteja configurado (o `flutterfire configure` faz isso automaticamente). iOS: inclua `GoogleService-Info.plist`.
+4) Regras do Firestore (dev):
+	 - Para testes locais, você pode usar regras abertas temporariamente:
+		 ```
+		 rules_version = '2';
+		 service cloud.firestore {
+			 match /databases/{database}/documents {
+				 match /{document=**} {
+					 allow read, write: if true;
+				 }
+			 }
+		 }
+		 ```
+		 Em produção, ajuste as regras para segurança adequada.
+5) Executar o app:
+	 - `flutter pub get`
+	 - `flutter run`
+
+O código foi adaptado para usar Firestore nos repositórios (clients, products, orders, expenses), manter os IDs inteiros com um contador transacional e substituir o backup JSON local por backup/restore via Firestore (`FirestoreBackup`).
+
 ## Estrutura de pastas (resumo)
 
 ```

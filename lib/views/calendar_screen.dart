@@ -8,6 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:delicias_da_may/data/csv_importer.dart';
+import 'package:delicias_da_may/repositories/client_repository.dart';
+import 'package:delicias_da_may/repositories/product_repository.dart';
+import 'package:delicias_da_may/repositories/order_repository.dart';
+import 'package:delicias_da_may/repositories/expense_repository.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -22,7 +29,38 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendário')),
+      appBar: AppBar(
+        title: const Text('Calendário'),
+        actions: [
+          IconButton(
+            tooltip: 'Importar CSV',
+            icon: const Icon(Icons.upload_file),
+            onPressed: () async {
+              try {
+                final res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+                if (res == null || res.files.isEmpty) return;
+                final path = res.files.single.path;
+                if (path == null) return;
+                final importer = CsvImporter(
+                  clients: ClientRepository(),
+                  products: ProductRepository(),
+                  orders: OrderRepository(),
+                  expenses: ExpenseRepository(),
+                );
+                await importer.importFile(File(path));
+                if (!context.mounted) return;
+                final calendar = context.read<CalendarViewModel>();
+                await calendar.reloadOptions();
+                await calendar.loadForDay(calendar.selectedDay);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Importação concluída')));
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha ao importar: $e')));
+              }
+            },
+          ),
+        ],
+      ),
       body: Consumer<CalendarViewModel>(
         builder: (context, vm, _) {
           return Stack(

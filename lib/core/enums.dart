@@ -1,4 +1,4 @@
-enum PaymentMethod { credito, debito, pix, dinheiro }
+enum PaymentMethod { credito, debito, pix, dinheiro, brinde }
 
 extension PaymentMethodX on PaymentMethod {
   String get label => switch (this) {
@@ -6,6 +6,7 @@ extension PaymentMethodX on PaymentMethod {
         PaymentMethod.debito => 'Débito',
         PaymentMethod.pix => 'Pix',
         PaymentMethod.dinheiro => 'Dinheiro',
+    PaymentMethod.brinde => 'Brinde',
       };
 
   static PaymentMethod parse(String s) {
@@ -20,6 +21,8 @@ extension PaymentMethodX on PaymentMethod {
         return PaymentMethod.pix;
       case 'dinheiro':
         return PaymentMethod.dinheiro;
+      case 'brinde':
+        return PaymentMethod.brinde;
       default:
         return PaymentMethod.pix;
     }

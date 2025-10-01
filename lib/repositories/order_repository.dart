@@ -1,88 +1,109 @@
-import 'package:delicias_da_may/data/local_db.dart';
 import 'package:delicias_da_may/models/order.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:delicias_da_may/core/enums.dart';
+import 'package:delicias_da_may/data/firestore_db.dart';
+import 'package:delicias_da_may/data/firestore_counters.dart';
 
 class OrderRepository {
-  final dbFuture = LocalDb.instance.database;
+  final _col = FirestoreDb.ordersCol();
 
   Future<int> insert(Order order) async {
-    final db = await dbFuture;
-    return db.insert(Order.table, order.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = order.id ?? await FirestoreCounters.next('orders');
+    await _col.doc(id.toString()).set({
+      'produto_id': order.produtoId,
+      'cliente_id': order.clienteId,
+      'valor': order.valor,
+      'quantidade': order.quantidade,
+      'pagamento': order.pagamento.label,
+      'time': order.time.millisecondsSinceEpoch,
+    });
+    return 1;
   }
 
   Future<List<Order>> getByDate(DateTime date) async {
-    final db = await dbFuture;
     final start = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59, 999).millisecondsSinceEpoch;
-    final maps = await db.query(
-      Order.table,
-      where: 'time BETWEEN ? AND ?',
-      whereArgs: [start, end],
-      orderBy: 'time DESC',
-    );
-    return maps.map((e) => Order.fromMap(e)).toList();
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .orderBy('time', descending: true)
+        .get();
+    return snap.docs.map((d) {
+      final m = d.data();
+      // Ensure map has expected keys for Order.fromMap
+      return Order.fromMap({
+        'id': int.tryParse(d.id),
+        'produto_id': m['produto_id'],
+        'cliente_id': m['cliente_id'],
+        'valor': m['valor'],
+        'quantidade': m['quantidade'] ?? 1,
+        'pagamento': m['pagamento'],
+        'time': m['time'],
+      });
+    }).toList();
   }
 
   Future<double> sumByMonth(int year, int month) async {
-    final db = await dbFuture;
     final start = DateTime(year, month, 1).millisecondsSinceEpoch;
     final end = DateTime(year, month + 1, 0, 23, 59, 59, 999).millisecondsSinceEpoch;
-    final res = await db.rawQuery(
-      'SELECT SUM(valor) as total FROM ${Order.table} WHERE time BETWEEN ? AND ?',
-      [start, end],
-    );
-    final v = (res.first['total'] as num?)?.toDouble() ?? 0.0;
-    return v;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.fold<double>(0.0, (p, d) => p + ((d.data()['valor'] as num?)?.toDouble() ?? 0.0));
   }
 
   Future<Order?> getById(int id) async {
-    final db = await dbFuture;
-    final res = await db.query(Order.table, where: 'id = ?', whereArgs: [id], limit: 1);
-    if (res.isEmpty) return null;
-    return Order.fromMap(res.first);
+    final doc = await _col.doc(id.toString()).get();
+    if (!doc.exists) return null;
+    return Order.fromMap({'id': id, ...doc.data()!});
   }
 
   Future<int> delete(int id) async {
-    final db = await dbFuture;
-    return db.delete(Order.table, where: 'id = ?', whereArgs: [id]);
+    await _col.doc(id.toString()).delete();
+    return 1;
   }
 
   Future<int> update(Order order) async {
-    final db = await dbFuture;
-    return db.update(Order.table, order.toMap(), where: 'id = ?', whereArgs: [order.id]);
+    final id = order.id;
+    if (id == null) return 0;
+    await _col.doc(id.toString()).update({
+      'produto_id': order.produtoId,
+      'cliente_id': order.clienteId,
+      'valor': order.valor,
+      'quantidade': order.quantidade,
+      'pagamento': order.pagamento.label,
+      'time': order.time.millisecondsSinceEpoch,
+    });
+    return 1;
   }
 
   Future<double> sumByYear(int year) async {
-    final db = await dbFuture;
     final start = DateTime(year, 1, 1).millisecondsSinceEpoch;
     final end = DateTime(year, 12, 31, 23, 59, 59, 999).millisecondsSinceEpoch;
-    final res = await db.rawQuery(
-      'SELECT SUM(valor) as total FROM ${Order.table} WHERE time BETWEEN ? AND ?',
-      [start, end],
-    );
-    final v = (res.first['total'] as num?)?.toDouble() ?? 0.0;
-    return v;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.fold<double>(0.0, (p, d) => p + ((d.data()['valor'] as num?)?.toDouble() ?? 0.0));
   }
 
   Future<int> countByMonth(int year, int month) async {
-    final db = await dbFuture;
     final start = DateTime(year, month, 1).millisecondsSinceEpoch;
     final end = DateTime(year, month + 1, 0, 23, 59, 59, 999).millisecondsSinceEpoch;
-    final res = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM ${Order.table} WHERE time BETWEEN ? AND ?',
-      [start, end],
-    );
-    return (res.first['cnt'] as num?)?.toInt() ?? 0;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.length;
   }
 
   Future<int> countByYear(int year) async {
-    final db = await dbFuture;
     final start = DateTime(year, 1, 1).millisecondsSinceEpoch;
     final end = DateTime(year, 12, 31, 23, 59, 59, 999).millisecondsSinceEpoch;
-    final res = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM ${Order.table} WHERE time BETWEEN ? AND ?',
-      [start, end],
-    );
-    return (res.first['cnt'] as num?)?.toInt() ?? 0;
+    final snap = await _col
+        .where('time', isGreaterThanOrEqualTo: start)
+        .where('time', isLessThanOrEqualTo: end)
+        .get();
+    return snap.docs.length;
   }
 }

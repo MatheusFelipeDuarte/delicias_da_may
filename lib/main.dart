@@ -10,16 +10,16 @@ import 'package:delicias_da_may/viewmodels/finance_view_model.dart';
 import 'package:delicias_da_may/views/tabs_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:io' show Platform;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
+// If you generate firebase_options.dart via FlutterFire CLI, you can import it:
+import 'firebase_options.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
+  // await Firebase.initializeApp();
+  // If using FlutterFire CLI generated options:
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Initialize intl for pt_BR used by TableCalendar
   initializeDateFormatting('pt_BR');
   runApp(const MyApp());
